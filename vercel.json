@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["iad1"],
+  "crons": [
+    {
+      "path": "/api/cron/sync-greenhouse",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/analyze-jobs",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
