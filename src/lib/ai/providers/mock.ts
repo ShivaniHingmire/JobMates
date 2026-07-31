@@ -21,6 +21,11 @@ function hashEmbedding(text: string) {
   return vector.map((value) => value / magnitude);
 }
 
+function truncateMessage(message: string, limit: number) {
+  if (message.length <= limit) return message;
+  return `${message.slice(0, limit - 1).trimEnd()}…`;
+}
+
 export class MockAiProvider implements AiProvider {
   async parseResume(
     text: string,
@@ -142,7 +147,8 @@ export class MockAiProvider implements AiProvider {
       ? `Hi ${input.recipientName},`
       : "Hello,";
     const email = `${greeting}\n\nI’m reaching out about the ${input.jobTitle} role at ${input.company}. ${fact} The role’s focus on ${input.matchedSkills.slice(0, 2).join(" and ")} feels closely connected to the problems I hope to keep working on.\n\nWhat caught my attention is the combination of clear ownership and cross-functional collaboration described in the posting. I would value the chance to learn how the team defines success in the first six months, what the most important current challenge looks like, and where this person can make an early contribution.\n\nIf my background may be useful, I would be glad to share more context and hear about the team’s priorities. I know your time is limited, so even a brief direction to the right person would be appreciated.\n\nThank you for considering my note.`;
-    const short = `${greeting} I’m interested in the ${input.jobTitle} role at ${input.company}. ${fact} I’d love to connect and learn more.`;
+    const connection = `${greeting} I’m exploring the ${input.jobTitle} role at ${input.company}. ${fact} I’d value connecting and following the team’s work.`;
+    const followUp = `${greeting}\n\nI wanted to follow up about the ${input.jobTitle} role at ${input.company}. ${fact} The work around ${input.matchedSkills.slice(0, 2).join(" and ")} is especially relevant to my background. What would you say is the most important outcome for this role in its first six months? I’d appreciate any perspective you can share.`;
     return OutreachDraftSchema.parse({
       subject:
         input.channel === "email"
@@ -151,7 +157,9 @@ export class MockAiProvider implements AiProvider {
       body:
         input.channel === "email"
           ? email
-          : short.slice(0, input.channel === "linkedin_connection" ? 300 : 600),
+          : input.channel === "linkedin_connection"
+            ? truncateMessage(connection, 300)
+            : truncateMessage(followUp, 600),
       usedFacts: [fact],
     });
   }

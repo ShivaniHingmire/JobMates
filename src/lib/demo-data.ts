@@ -26,6 +26,7 @@ export const demoJobs: CandidateJob[] = [
   {
     id: "demo-product-designer",
     companyId: "almanac",
+    category: "ai",
     company: "Almanac Labs",
     companyInitials: "AL",
     companyColor: "#214f3b",
@@ -64,6 +65,7 @@ export const demoJobs: CandidateJob[] = [
   {
     id: "demo-product-manager",
     companyId: "northstar",
+    category: "tech",
     company: "Northstar Health",
     companyInitials: "NH",
     companyColor: "#405f92",
@@ -97,6 +99,7 @@ export const demoJobs: CandidateJob[] = [
   {
     id: "demo-frontend-engineer",
     companyId: "beacon",
+    category: "software",
     company: "Beacon",
     companyInitials: "B",
     companyColor: "#d34a31",
@@ -130,6 +133,7 @@ export const demoJobs: CandidateJob[] = [
   {
     id: "demo-content-strategist",
     companyId: "fieldguide",
+    category: "ai",
     company: "Fieldguide",
     companyInitials: "FG",
     companyColor: "#7e4f8a",
@@ -167,6 +171,7 @@ export const demoJobs: CandidateJob[] = [
   {
     id: "demo-data-analyst",
     companyId: "juniper",
+    category: "tech",
     company: "Juniper Finance",
     companyInitials: "JF",
     companyColor: "#a96d16",
@@ -200,6 +205,7 @@ export const demoJobs: CandidateJob[] = [
   {
     id: "demo-design-program-manager",
     companyId: "lattice",
+    category: "software",
     company: "LatticeWorks",
     companyInitials: "LW",
     companyColor: "#317168",

@@ -1,3 +1,5 @@
+import type { JobCategory } from "@/lib/job-sources";
+
 export const WORKPLACE_TYPES = ["remote", "hybrid", "onsite", "unknown"] as const;
 export const EMPLOYMENT_TYPES = [
   "full-time",
@@ -35,6 +37,7 @@ export interface MatchComponents {
 export interface Job {
   id: string;
   companyId: string;
+  category: JobCategory;
   company: string;
   companyInitials: string;
   companyColor: string;

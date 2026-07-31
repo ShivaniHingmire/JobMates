@@ -13,13 +13,26 @@ export default function PrivacyPage() {
       <div className="mt-8 space-y-6 leading-7 text-muted">
         <p>
           Your résumé is private. It is stored in an access-controlled bucket and
-          used only to extract evidence, create fit analyses, and draft messages
-          you request.
+          used to extract evidence, create fit analyses, draft messages you
+          request, and prepare application details when you explicitly choose to
+          apply.
         </p>
         <p>
-          We do not sell résumé data, submit applications, search for recruiter
-          identities, or send messages on your behalf. Fit scores compare supplied
-          evidence with a job post; they do not predict whether you will be hired.
+          We do not sell résumé data, search for recruiter identities, or send
+          outreach messages on your behalf. Fit scores compare supplied evidence
+          with a job post; they do not predict whether you will be hired.
+        </p>
+        <p>
+          If you install the optional Apply Assistant, a right swipe or Apply
+          action creates a 30-minute application package. The assistant can fill
+          the employer form, attach your résumé, and submit a complete application
+          in a hidden tab. Unknown ordinary questions return to JobMates and are
+          saved to your answer bank. Voluntary self-identification answers are
+          filled only when you explicitly provide and enable them; they are never
+          inferred or used for ranking. Login, CAPTCHA, unsupported sensitive
+          questions, legal consent, and unresolved portal validation open for
+          your review. JobMates does not reuse, create, or store employer-portal
+          passwords.
         </p>
         <p>
           AI requests use schema-constrained outputs and disable provider storage

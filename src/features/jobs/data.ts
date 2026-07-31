@@ -15,10 +15,16 @@ import type {
   WorkplaceType,
 } from "@/lib/domain";
 import { calculateMatchScore } from "@/lib/matching/score";
+import {
+  categoryForCompany,
+  CURATED_COMPANIES,
+  JOB_CATEGORIES,
+} from "@/lib/job-sources";
 import { createClient } from "@/lib/supabase/server";
 
 interface CompanyRelation {
   name: string;
+  slug: string;
 }
 
 interface JobRow {
@@ -35,6 +41,7 @@ interface JobRow {
   apply_url: string;
   posted_at: string | null;
   is_active: boolean;
+  analysis_status: "pending" | "processing" | "ready" | "failed";
   requirements: JobProfile | null;
   embedding: unknown;
   companies: CompanyRelation | CompanyRelation[] | null;
@@ -79,6 +86,11 @@ function vector(value: unknown): number[] | undefined {
 function companyName(row: JobRow) {
   if (Array.isArray(row.companies)) return row.companies[0]?.name ?? "Employer";
   return row.companies?.name ?? "Employer";
+}
+
+function companySlug(row: JobRow) {
+  if (Array.isArray(row.companies)) return row.companies[0]?.slug ?? "";
+  return row.companies?.slug ?? "";
 }
 
 function companyColor(id: string) {
@@ -164,6 +176,7 @@ function toCandidate(
   return {
     id: row.id,
     companyId: row.company_id,
+    category: categoryForCompany(companySlug(row)),
     company,
     companyInitials: company
       .split(/\s+/)
@@ -201,7 +214,9 @@ function toCandidate(
       ...match.missingPreferredSkills,
     ],
     explanation:
-      match.missingRequiredSkills.length > 0
+      row.analysis_status !== "ready"
+        ? "This is a newly synced live posting. Detailed skill analysis is still being prepared."
+        : match.missingRequiredSkills.length > 0
         ? `Your strongest overlap is ${match.matchedSkills.slice(0, 3).join(", ") || "the role direction"}. The clearest required gap is ${match.missingRequiredSkills[0]}.`
         : `Your résumé shows evidence for the listed required skills, with especially relevant overlap in ${match.matchedSkills.slice(0, 3).join(", ") || "the role direction"}.`,
   };
@@ -239,7 +254,7 @@ async function rowsByIds(ids: string[]) {
   const supabase = await createClient();
   const { data } = await supabase!
     .from("jobs")
-    .select("*,companies(name)")
+    .select("*,companies(name,slug)")
     .in("id", ids);
   return (data ?? []) as unknown as JobRow[];
 }
@@ -253,14 +268,26 @@ export async function getCandidateJobs() {
     .select("job_id")
     .eq("user_id", user.id);
   const excludedIds = new Set(decided?.map((state) => state.job_id) ?? []);
-  const { data } = await supabase
-    .from("jobs")
-    .select("*,companies(name)")
-    .eq("is_active", true)
-    .eq("analysis_status", "ready")
-    .order("posted_at", { ascending: false })
-    .limit(100);
-  const rows = (data ?? []) as unknown as JobRow[];
+  const categoryResults = await Promise.all(
+    JOB_CATEGORIES.map((category) =>
+      supabase
+        .from("jobs")
+        .select("*,companies!inner(name,slug)")
+        .eq("is_active", true)
+        .in("analysis_status", ["ready", "pending", "processing"])
+        .in(
+          "companies.slug",
+          CURATED_COMPANIES.filter(
+            (company) => company.category === category,
+          ).map((company) => company.slug),
+        )
+        .order("posted_at", { ascending: false })
+        .limit(500),
+    ),
+  );
+  const rows = categoryResults.flatMap(
+    ({ data }) => (data ?? []) as unknown as JobRow[],
+  );
   const excludedCompanies = preferences.excluded_companies.map((value) =>
     value.toLowerCase(),
   );
@@ -293,8 +320,28 @@ export async function getCandidateJobs() {
     row,
     match: matchFor(row, resume, preferences),
   }));
+  const ordered = candidates.sort(
+    (a, b) =>
+      b.match.score - a.match.score ||
+      new Date(b.row.posted_at ?? 0).getTime() -
+        new Date(a.row.posted_at ?? 0).getTime(),
+  );
+  const counts = new Map<string, number>();
+  const categoryCounts = new Map<string, number>();
+  const selected: typeof candidates = [];
+  for (const item of ordered) {
+    const count = counts.get(item.row.company_id) ?? 0;
+    if (count >= 2) continue;
+    const category = categoryForCompany(companySlug(item.row));
+    const categoryCount = categoryCounts.get(category) ?? 0;
+    if (categoryCount >= 20) continue;
+    counts.set(item.row.company_id, count + 1);
+    categoryCounts.set(category, categoryCount + 1);
+    selected.push(item);
+    if (selected.length === 60) break;
+  }
   await Promise.all(
-    candidates.map(({ row, match }) =>
+    selected.map(({ row, match }) =>
       supabase.from("match_analyses").upsert(
         {
           user_id: user.id,
@@ -316,22 +363,7 @@ export async function getCandidateJobs() {
       ),
     ),
   );
-  const ordered = candidates.sort(
-    (a, b) =>
-      b.match.score - a.match.score ||
-      new Date(b.row.posted_at ?? 0).getTime() -
-        new Date(a.row.posted_at ?? 0).getTime(),
-  );
-  const counts = new Map<string, number>();
-  const result: CandidateJob[] = [];
-  for (const item of ordered) {
-    const count = counts.get(item.row.company_id) ?? 0;
-    if (count >= 2) continue;
-    counts.set(item.row.company_id, count + 1);
-    result.push(toCandidate(item.row, item.match));
-    if (result.length === 20) break;
-  }
-  return result;
+  return selected.map(({ row, match }) => toCandidate(row, match));
 }
 
 export async function getJobById(id: string) {
@@ -341,13 +373,14 @@ export async function getJobById(id: string) {
   if (!context) return null;
   const { data } = await context.supabase
     .from("jobs")
-    .select("*,companies(name)")
+    .select("*,companies(name,slug)")
     .eq("id", id)
     .single();
   if (!data) return null;
   const row = data as unknown as JobRow;
   const match = matchFor(row, context.resume, context.preferences);
   const candidate = toCandidate(row, match);
+  if (row.analysis_status !== "ready") return candidate;
   const { data: stored } = await context.supabase
     .from("match_analyses")
     .select("id,explanation")

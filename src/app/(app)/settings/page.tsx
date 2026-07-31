@@ -1,13 +1,17 @@
-import { FileText, LockKeyhole, ShieldCheck } from "lucide-react";
+import { FileText, LockKeyhole, ShieldCheck, WandSparkles } from "lucide-react";
 import { PageHeading } from "@/components/page-heading";
 import { Card } from "@/components/ui/card";
+import { ApplyAssistantStatus } from "@/features/settings/apply-assistant-status";
+import { ApplicationProfileForm } from "@/features/settings/application-profile-form";
 import { DeleteAccountButton } from "@/features/settings/delete-account-button";
+import { getApplicationProfile } from "@/lib/application-profile.server";
 import { requireUser } from "@/lib/auth";
 
 export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const user = await requireUser();
+  const applicationProfile = await getApplicationProfile(user);
   return (
     <>
       <PageHeading
@@ -16,6 +20,27 @@ export default async function SettingsPage() {
         description="Control your search preferences, résumé, privacy, and account."
       />
       <div className="mx-auto grid max-w-4xl gap-5">
+        <Card className="p-6">
+          <div className="flex gap-4">
+            <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-mint text-sage">
+              <WandSparkles className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-display text-2xl font-semibold">
+                Application questionnaire
+              </h2>
+              <p className="mt-2 mb-5 text-sm leading-6 text-muted">
+                Complete this once before right-swiping. JobMates reuses the
+                answers across employer portals, asks you about new required
+                questions inside JobMates, and keeps the employer tab hidden
+                unless login, CAPTCHA, unsupported sensitive data, or legal
+                consent needs you.
+              </p>
+              <ApplyAssistantStatus />
+              <ApplicationProfileForm profile={applicationProfile} />
+            </div>
+          </div>
+        </Card>
         <Card className="p-6">
           <div className="flex gap-4">
             <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-mint text-sage">

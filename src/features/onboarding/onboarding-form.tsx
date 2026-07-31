@@ -42,7 +42,7 @@ export function OnboardingForm() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(Object.fromEntries(form)),
     });
-    if (response.ok) window.location.href = "/discover";
+    if (response.ok) window.location.href = "/settings?setup=application";
   }
 
   return (
@@ -75,7 +75,8 @@ export function OnboardingForm() {
           </h1>
           <p className="mt-3 max-w-xl leading-7 text-muted">
             We use the text to explain fit and ground drafts. Your original file
-            stays private and is never shared with employers.
+            stays private until you choose to apply; the optional Apply Assistant
+            can then attach it to the employer form during Direct apply.
           </p>
           <button
             type="button"
@@ -196,7 +197,7 @@ export function OnboardingForm() {
               Back
             </Button>
             <Button type="submit" size="lg">
-              Build my deck
+              Continue to application questionnaire
             </Button>
           </div>
         </form>

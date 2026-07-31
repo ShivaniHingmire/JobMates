@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 
@@ -22,6 +22,13 @@ export const metadata: Metadata = {
   },
   description:
     "AI-powered job matching, swipe discovery, application tracking, and outreach drafts for thoughtful job searches.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#f7f4ec",
 };
 
 export default function RootLayout({

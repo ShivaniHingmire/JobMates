@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const draft = await ai.generateOutreach(parsed.data, {
       userId: user.id,
       feature: "outreach",
-      promptVersion: "outreach-v1",
+      promptVersion: "outreach-v2",
     });
     const words = draft.body.trim().split(/\s+/).length;
     if (
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const usage = consumeAiUsage(ai);
     await recordAiRun({
       feature: "outreach",
-      promptVersion: "outreach-v1",
+      promptVersion: "outreach-v2",
       status: "succeeded",
       durationMs: Date.now() - started,
       userId: user.id,
@@ -67,14 +67,14 @@ export async function POST(request: Request) {
           body: draft.body,
           source_facts: parsed.data.sourceFacts,
           model: process.env.AI_TEXT_MODEL ?? "gpt-5.6-terra",
-          prompt_version: "outreach-v1",
+          prompt_version: "outreach-v2",
         });
     }
     return NextResponse.json({ ok: true, data: draft });
   } catch {
     await recordAiRun({
       feature: "outreach",
-      promptVersion: "outreach-v1",
+      promptVersion: "outreach-v2",
       status: "failed",
       durationMs: Date.now() - started,
       userId: user.id,

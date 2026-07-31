@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JobMates Apply Assistant</title>
+    <style>
+      body {
+        width: 300px;
+        margin: 0;
+        padding: 18px;
+        background: #fffdf8;
+        color: #17211b;
+        font: 14px/1.5 system-ui, sans-serif;
+      }
+      h1 { margin: 0; font-size: 18px; }
+      p { color: #667069; }
+      a { color: #c9432c; font-weight: 700; }
+      label {
+        display: flex;
+        gap: 10px;
+        margin: 14px 0;
+        border: 1px solid #d9d5ca;
+        border-radius: 14px;
+        padding: 12px;
+        font-weight: 700;
+      }
+      label span { display: block; }
+      label small {
+        display: block;
+        margin-top: 4px;
+        color: #667069;
+        font-weight: 400;
+      }
+      input { margin-top: 3px; }
+    </style>
+  </head>
+  <body>
+    <h1>JobMates Apply Assistant</h1>
+    <p id="status">Waiting for a swipe from JobMates.</p>
+    <label>
+      <input id="direct-apply" type="checkbox" />
+      <span>
+        Direct apply
+        <small>
+          Complete and submit employer forms in hidden tabs. New questions
+          return to JobMates; only login, CAPTCHA, unsupported sensitive data,
+          and legal consent open for review.
+        </small>
+      </span>
+    </label>
+    <a href="http://127.0.0.1:3000/settings" target="_blank">
+      Complete application questionnaire
+    </a>
+    <script src="popup.js"></script>
+  </body>
+</html>

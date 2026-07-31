@@ -1,8 +1,17 @@
 "use client";
 
-import { ArrowUpRight, X } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  ApplicationQuestionsDialog,
+  type ApplicationQuestionRequest,
+  recordApplicationAction,
+  startApplicationHandoff,
+} from "@/features/applications/application-handoff";
+import { useApplyAssistant } from "@/features/applications/apply-assistant";
+import { ApplicationQuestionSchema } from "@/lib/application-profile";
 
 export function ApplyButton({
   jobId,
@@ -13,80 +22,99 @@ export function ApplyButton({
   applyUrl: string;
   active: boolean;
 }) {
-  const [prompting, setPrompting] = useState(false);
+  const [error, setError] = useState("");
+  const [questionRequest, setQuestionRequest] =
+    useState<ApplicationQuestionRequest | null>(null);
+  const assistant = useApplyAssistant();
 
   useEffect(() => {
-    const onFocus = () => {
-      if (sessionStorage.getItem(`apply-started:${jobId}`)) setPrompting(true);
+    const onResult = (event: MessageEvent) => {
+      if (
+        event.source !== window ||
+        event.origin !== window.location.origin ||
+        event.data?.type !== "JOBMATES_APPLICATION_RESULT" ||
+        event.data.result?.jobId !== jobId
+      )
+        return;
+      const result = event.data.result;
+      if (result.status === "applied") {
+        void recordApplicationAction(jobId, result.applyUrl, "applied");
+        sessionStorage.removeItem(`apply-started:${jobId}`);
+        setError("Application submitted successfully in the background.");
+        setQuestionRequest(null);
+      }
+      if (result.status === "questions_required") {
+        const parsed = ApplicationQuestionSchema.array().safeParse(
+          result.questions,
+        );
+        if (parsed.success && parsed.data.length)
+          setQuestionRequest({
+            packageId: result.packageId,
+            jobId,
+            questions: parsed.data,
+          });
+      }
+      if (result.status === "review_required")
+        setError(
+          "This employer requires login, verification, legal consent, or an unsupported sensitive answer, so the exception opened for your review.",
+        );
     };
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    window.addEventListener("message", onResult);
+    return () => window.removeEventListener("message", onResult);
   }, [jobId]);
 
-  async function start() {
-    await fetch("/api/applications", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jobId, action: "apply_started", sourceUrl: applyUrl }),
-    });
-    sessionStorage.setItem(`apply-started:${jobId}`, "1");
-    window.open(applyUrl, "_blank", "noopener,noreferrer");
-  }
-
-  async function confirm(status: "applied" | "planned" | "none") {
-    await fetch("/api/applications", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jobId, action: status, sourceUrl: applyUrl }),
-    });
-    sessionStorage.removeItem(`apply-started:${jobId}`);
-    setPrompting(false);
+  function start() {
+    setError("");
+    void startApplicationHandoff(
+      jobId,
+      applyUrl,
+      assistant?.installed === true,
+    )
+      .then((result) => {
+        if (result.mode === "direct")
+          setError("Direct apply started in the background.");
+        if (result.mode === "extension_required")
+          setError(
+            "Reload the Apply Assistant extension and refresh JobMates. No employer tab was opened.",
+          );
+        if (result.mode === "profile_required")
+          setError(
+            `Complete your application questionnaire first: ${result.missingFields.join(", ")}.`,
+          );
+      })
+      .catch(() =>
+        setError(
+          "JobMates could not prepare the application. No employer tab was opened.",
+        ),
+      );
   }
 
   return (
     <>
       <Button size="lg" onClick={start} disabled={!active}>
-        {active ? "Apply on employer site" : "Job is no longer active"}
+        {active ? "Start application" : "Job is no longer active"}
         {active && <ArrowUpRight className="size-4" />}
       </Button>
-      {prompting && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="apply-confirm-title"
-          className="fixed inset-0 z-[80] grid place-items-center bg-ink/40 p-4 backdrop-blur-sm"
-        >
-          <div className="relative w-full max-w-md rounded-[2rem] bg-surface p-7 shadow-2xl">
-            <button
-              type="button"
-              aria-label="Close"
-              onClick={() => setPrompting(false)}
-              className="absolute right-5 top-5 grid size-9 place-items-center rounded-full hover:bg-paper"
-            >
-              <X className="size-4" />
-            </button>
-            <p className="text-xs font-bold uppercase tracking-wider text-brand">
-              Welcome back
-            </p>
-            <h2 id="apply-confirm-title" className="font-display mt-2 text-3xl font-semibold">
-              Did you apply?
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-muted">
-              JobMates cannot see the employer form, so you stay in control of the
-              application record.
-            </p>
-            <div className="mt-6 grid gap-2">
-              <Button onClick={() => void confirm("applied")}>Yes, I applied</Button>
-              <Button variant="secondary" onClick={() => void confirm("planned")}>
-                Planning to apply
-              </Button>
-              <Button variant="ghost" onClick={() => void confirm("none")}>
-                Not now
-              </Button>
-            </div>
-          </div>
+      {error && (
+        <div className="max-w-sm text-center text-xs text-brand">
+          <p role="alert">{error}</p>
+          {error.startsWith("Complete your application questionnaire") && (
+            <Link href="/settings" className="mt-1 inline-block font-bold underline">
+              Open questionnaire
+            </Link>
+          )}
         </div>
       )}
+      <ApplicationQuestionsDialog
+        request={questionRequest}
+        onClose={() => setQuestionRequest(null)}
+        onSubmitted={() => {
+          setQuestionRequest(null);
+          setError(
+            "Answer saved. JobMates is continuing in the background.",
+          );
+        }}
+      />
     </>
   );
 }

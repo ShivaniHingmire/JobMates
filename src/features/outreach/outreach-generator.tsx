@@ -7,6 +7,14 @@ import type { CandidateJob } from "@/lib/domain";
 
 type Channel = "email" | "linkedin_connection" | "linkedin_message";
 
+const channelHelp: Record<Channel, string> = {
+  email: "A detailed 120–180 word recruiter introduction.",
+  linkedin_connection:
+    "A concise first-contact note that invites the recipient to connect.",
+  linkedin_message:
+    "A fuller follow-up with one specific question and a clear reason to reply.",
+};
+
 export function OutreachGenerator({ job }: { job: CandidateJob }) {
   const [channel, setChannel] = useState<Channel>("email");
   const [recipient, setRecipient] = useState("");
@@ -74,7 +82,12 @@ export function OutreachGenerator({ job }: { job: CandidateJob }) {
           <select
             className="mt-2 h-11 w-full rounded-xl border border-line bg-white px-3 font-normal"
             value={channel}
-            onChange={(event) => setChannel(event.target.value as Channel)}
+            onChange={(event) => {
+              setChannel(event.target.value as Channel);
+              setSubject("");
+              setBody("");
+              setCopied(false);
+            }}
           >
             <option value="email">Recruiter email</option>
             <option value="linkedin_connection">LinkedIn connection note</option>
@@ -91,6 +104,7 @@ export function OutreachGenerator({ job }: { job: CandidateJob }) {
           />
         </label>
       </div>
+      <p className="mt-3 text-sm text-muted">{channelHelp[channel]}</p>
       <Button className="mt-4" onClick={generate} disabled={busy}>
         <Sparkles className="size-4" /> {busy ? "Drafting…" : "Generate draft"}
       </Button>

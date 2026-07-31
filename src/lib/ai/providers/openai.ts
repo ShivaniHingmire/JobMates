@@ -132,19 +132,20 @@ export class OpenAiProvider implements AiProvider {
     input: OutreachInput,
     context: AiRequestContext,
   ): Promise<OutreachDraft> {
-    const limits = {
-      email: "Use 120–180 words and include an informative subject.",
+    const channelInstructions = {
+      email:
+        "Write a 120–180 word recruiter introduction with an informative subject. Explain the fit, mention the supplied evidence, and close with a low-pressure request to discuss the role.",
       linkedin_connection:
-        "Use no more than 300 characters and return a null subject.",
+        "Write a first-contact LinkedIn connection request in no more than 300 characters with a null subject. Be concise, mention one grounded reason for the interest, and end by inviting the recipient to connect. Do not ask for a referral or meeting.",
       linkedin_message:
-        "Use no more than 600 characters and return a null subject.",
+        "Write a LinkedIn follow-up in no more than 600 characters with a null subject. Make it meaningfully fuller than a connection request, state that this is a follow-up about the role, include one specific question about the team or role, and invite a brief reply. Do not claim the recipient replied or accepted a connection.",
     } as const;
     const response = await this.client.responses.parse({
       model: env.AI_TEXT_MODEL,
       store: false,
       safety_identifier: createSafetyIdentifier(context.userId),
       reasoning: { effort: "low" },
-      instructions: `Write a ${input.tone} ${input.channel} note. ${limits[input.channel]} Use only sourceFacts for candidate claims. Return every fact used in usedFacts verbatim from sourceFacts. Never imply prior contact.`,
+      instructions: `Use a ${input.tone} tone. ${channelInstructions[input.channel]} Use only sourceFacts for candidate claims. Return every fact used in usedFacts verbatim from sourceFacts.`,
       input: JSON.stringify(input),
       text: {
         format: zodTextFormat(OutreachDraftSchema, "outreach_draft"),

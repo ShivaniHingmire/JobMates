@@ -5,6 +5,8 @@ const serverSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
   SUPABASE_SECRET_KEY: z.string().min(1).optional(),
   OPENAI_API_KEY: z.string().min(1).optional(),
   AI_PROVIDER: z.enum(["openai", "mock"]).default("openai"),
@@ -14,7 +16,16 @@ const serverSchema = z.object({
   SAFETY_IDENTIFIER_HMAC_SECRET: z.string().min(16).optional(),
 });
 
-export const env = serverSchema.parse(process.env);
+const parsedEnv = serverSchema.parse(process.env);
+
+export const env = {
+  ...parsedEnv,
+  NEXT_PUBLIC_SUPABASE_URL:
+    parsedEnv.NEXT_PUBLIC_SUPABASE_URL ?? parsedEnv.SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+    parsedEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    parsedEnv.SUPABASE_PUBLISHABLE_KEY,
+};
 
 export function isSupabaseConfigured() {
   return Boolean(

@@ -7,7 +7,7 @@ created inside its request.
 
 ```mermaid
 flowchart LR
-  G["Greenhouse boards"] --> S["Idempotent six-hour sync"]
+  G["100 curated Greenhouse, Ashby, and Lever boards"] --> S["Idempotent hourly sync"]
   S --> J["Jobs and analysis queue"]
   J --> A["Bounded job analyzer"]
   R["Private résumé"] --> T["PDF/DOCX text extraction"]

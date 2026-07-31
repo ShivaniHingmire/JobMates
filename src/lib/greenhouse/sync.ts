@@ -1,13 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  fetchGreenhouseBoard,
-  normalizeGreenhouseJob,
-} from "@/lib/greenhouse/client";
+import { fetchPublicJobBoard } from "@/lib/job-board/client";
 
 interface Company {
   id: string;
+  name?: string;
   greenhouse_board_token: string;
 }
+
+const UPSERT_BATCH_SIZE = 25;
+const MAX_JOBS_PER_COMPANY = 50;
 
 export async function syncGreenhouseCompany(
   admin: SupabaseClient,
@@ -21,8 +22,17 @@ export async function syncGreenhouseCompany(
     .single();
 
   try {
-    const board = await fetchGreenhouseBoard(company.greenhouse_board_token);
-    const normalized = board.jobs.map(normalizeGreenhouseJob);
+    const board = await fetchPublicJobBoard(
+      company.greenhouse_board_token,
+      company.name ?? "Employer",
+    );
+    const normalized = board.jobs
+      .toSorted(
+        (a, b) =>
+          new Date(b.posted_at ?? 0).getTime() -
+          new Date(a.posted_at ?? 0).getTime(),
+      )
+      .slice(0, MAX_JOBS_PER_COMPANY);
     const sourceIds = normalized.map((job) => job.source_job_id);
     const { data: existingJobs } = await admin
       .from("jobs")
@@ -30,7 +40,7 @@ export async function syncGreenhouseCompany(
         "id,source_job_id,content_hash,is_active,analysis_status,analysis_attempts,next_retry_at",
       )
       .eq("company_id", company.id)
-      .eq("source", "greenhouse");
+      .eq("source", board.source);
     const existingBySource = new Map(
       (existingJobs ?? []).map((job) => [job.source_job_id, job]),
     );
@@ -53,10 +63,15 @@ export async function syncGreenhouseCompany(
       };
     });
     if (rows.length) {
-      const { error } = await admin
-        .from("jobs")
-        .upsert(rows, { onConflict: "source,source_job_id" });
-      if (error) throw new Error("JOB_UPSERT_FAILED");
+      for (let offset = 0; offset < rows.length; offset += UPSERT_BATCH_SIZE) {
+        const { error } = await admin
+          .from("jobs")
+          .upsert(rows.slice(offset, offset + UPSERT_BATCH_SIZE), {
+            onConflict: "source,source_job_id",
+          });
+        if (error)
+          throw new Error(`JOB_UPSERT_FAILED_${error.code ?? "UNKNOWN"}`);
+      }
     }
 
     const stale =

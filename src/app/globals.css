@@ -38,6 +38,7 @@
 
 html {
   background: var(--paper);
+  text-size-adjust: 100%;
 }
 
 body {
@@ -45,6 +46,9 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, sans-serif;
   margin: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 button,
@@ -86,6 +90,50 @@ a {
 .glass {
   background: rgb(255 253 248 / 82%);
   backdrop-filter: blur(18px);
+}
+
+.safe-app-shell {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
+
+.safe-app-header {
+  min-height: calc(4.5rem + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-mobile-nav {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-page-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-modal {
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+@media (max-width: 47.999rem) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  .safe-app-shell {
+    padding-bottom: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

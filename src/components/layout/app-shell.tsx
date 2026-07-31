@@ -11,9 +11,9 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="noise min-h-screen bg-paper pb-20 md:pb-0">
+    <div className="safe-app-shell noise min-h-dvh bg-paper">
       <header className="glass sticky top-0 z-40 border-b border-line/80">
-        <div className="mx-auto flex h-18 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-10">
+        <div className="safe-app-header mx-auto flex max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-10">
           <Logo />
           <div className="hidden md:block">
             <AppNav />
@@ -45,10 +45,10 @@ export function AppShell({
           </div>
         </div>
       </header>
-      <main className="mx-auto min-h-[calc(100vh-4.5rem)] max-w-[1440px] px-4 py-6 sm:px-6 lg:px-10 lg:py-9">
+      <main className="mx-auto min-h-[calc(100dvh-4.5rem)] max-w-[1440px] px-4 py-5 sm:px-6 sm:py-6 lg:px-10 lg:py-9">
         {children}
       </main>
-      <div className="glass fixed inset-x-0 bottom-0 z-50 border-t border-line md:hidden">
+      <div className="safe-mobile-nav glass fixed inset-x-0 bottom-0 z-50 border-t border-line md:hidden">
         <AppNav mobile />
       </div>
     </div>

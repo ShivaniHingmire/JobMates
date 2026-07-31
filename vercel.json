@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/api/cron/sync-greenhouse",
-      "schedule": "0 */6 * * *"
+      "schedule": "17 * * * *"
     },
     {
       "path": "/api/cron/analyze-jobs",

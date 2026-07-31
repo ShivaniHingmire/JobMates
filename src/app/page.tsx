@@ -81,7 +81,7 @@ export default function Home() {
               </Link>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted">
-              {["Transparent scoring", "Private résumé", "No auto-apply"].map(
+              {["Transparent scoring", "Private résumé", "Review before submit"].map(
                 (label) => (
                   <span key={label} className="inline-flex items-center gap-2">
                     <Check className="size-4 text-sage" /> {label}

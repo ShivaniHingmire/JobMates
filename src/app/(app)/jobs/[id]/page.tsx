@@ -1,11 +1,17 @@
-import { BriefcaseBusiness, MapPin, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  BriefcaseBusiness,
+  MapPin,
+  Sparkles,
+} from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MatchScore } from "@/components/match-score";
 import { Badge } from "@/components/ui/badge";
 import { OutreachGenerator } from "@/features/outreach/outreach-generator";
 import { ApplyButton } from "@/features/applications/apply-button";
 import { getJobById } from "@/features/jobs/data";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatRelativeDate } from "@/lib/utils";
 
 export default async function JobDetailPage({
   params,
@@ -28,6 +34,12 @@ export default async function JobDetailPage({
 
   return (
     <div className="mx-auto max-w-5xl">
+      <Link
+        href="/discover"
+        className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-muted transition hover:text-ink"
+      >
+        <ArrowLeft className="size-4" /> Back to job cards
+      </Link>
       <div className="rounded-[2rem] border border-line bg-surface p-6 sm:p-9">
         <div className="flex flex-col justify-between gap-6 sm:flex-row">
           <div>
@@ -39,6 +51,7 @@ export default async function JobDetailPage({
                 {job.companyInitials}
               </div>
               <p className="font-bold text-brand">{job.company}</p>
+              <Badge tone="neutral">{job.category.toUpperCase()}</Badge>
             </div>
             <h1 className="font-display mt-6 max-w-3xl text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">
               {job.title}
@@ -55,6 +68,7 @@ export default async function JobDetailPage({
                   ? `${formatCurrency(job.salaryMin)}–${formatCurrency(job.salaryMax)}`
                   : "Salary not disclosed"}
               </span>
+              <span>Posted {formatRelativeDate(job.postedAt)}</span>
             </div>
           </div>
           <div className="flex flex-col items-center gap-8">
@@ -72,16 +86,22 @@ export default async function JobDetailPage({
         <div className="space-y-5">
           <section className="rounded-[1.75rem] border border-line bg-surface p-6">
             <h2 className="font-display text-2xl font-semibold">About the role</h2>
-            <p className="mt-3 leading-7 text-muted">{job.description}</p>
-            <h3 className="mt-6 font-bold">What you&apos;ll do</h3>
-            <ul className="mt-3 space-y-3 text-sm leading-6 text-muted">
-              {job.responsibilities.map((item) => (
-                <li key={item} className="flex gap-3">
-                  <span className="mt-2 size-1.5 shrink-0 rounded-full bg-brand" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+            <p className="mt-3 whitespace-pre-line break-words leading-7 text-muted">
+              {job.description}
+            </p>
+            {job.responsibilities.length > 0 && (
+              <>
+                <h3 className="mt-6 font-bold">What you&apos;ll do</h3>
+                <ul className="mt-3 space-y-3 text-sm leading-6 text-muted">
+                  {job.responsibilities.map((item) => (
+                    <li key={item} className="flex gap-3">
+                      <span className="mt-2 size-1.5 shrink-0 rounded-full bg-brand" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </section>
           <OutreachGenerator job={job} />
         </div>

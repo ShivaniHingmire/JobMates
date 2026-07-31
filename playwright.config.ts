@@ -9,12 +9,13 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npm exec --yes pnpm@10.14.0 -- dev",
+    command: "./node_modules/.bin/next dev",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile", use: { ...devices["Pixel 7"] } },
+    { name: "mobile-safari", use: { ...devices["iPhone 13"] } },
   ],
 });

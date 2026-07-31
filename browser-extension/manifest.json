@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "JobMates Apply Assistant",
+  "version": "0.2.0",
+  "description": "Autofills supported job application portals from a user-approved JobMates application package.",
+  "permissions": ["storage", "tabs", "scripting", "alarms"],
+  "host_permissions": [
+    "http://127.0.0.1:3000/*",
+    "http://localhost:3000/*",
+    "https://jobmates.app/*",
+    "https://www.jobmates.app/*",
+    "http://*/*",
+    "https://*/*",
+    "https://*.supabase.co/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "JobMates Apply Assistant",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1:3000/*",
+        "http://localhost:3000/*",
+        "https://jobmates.app/*",
+        "https://www.jobmates.app/*"
+      ],
+      "js": ["bridge.js"],
+      "run_at": "document_start"
+    }
+  ]
+}
